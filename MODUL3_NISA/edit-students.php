@@ -1,17 +1,36 @@
 <?php
-include('includes/dbconnection.php'); // Koneksi database
-include('includes/function.php');
+include('includes/dbconnection.php'); 
+include('includes/function.php'); // Pastikan koneksi menggunakan mysqli
 
-// Buatkan perkondisian untuk menangkap 'id' mahasiswa dengan metode GET
+if (isset($_POST["update"])) {
+    $stui = $_POST["nim"];
+    $stuname = $_POST["stuname"];
+    $stuid = $_POST["stuid"];
+    $stuclass = $_POST["stuclass"];
+    $stuangkatan = $_POST["stuangkatan"];
+
+    $query = "UPDATE tb_student SET
+            nama='$stuname',
+            jurusan='$stuclass',
+            angkatan='$stuangkatan'
+            WHERE nim='$stuid'";
 
 
-    // Ambil data mahasiswa berdasarkan ID
+    $test = mysqli_query($conn, $query);
 
-    // bikin variabel $student yang menyimpan hasil query
-
-if (isset($_POST['submit'])) {
-    editStudent($id);
+    
+    if (mysqli_affected_rows($conn) > 0) {
+        header("Location: edit-students.php");
+    } else {
+        echo "
+        <script>
+            alert('Data failed');
+            document.location.href = edit-students.php;
+        </script>
+        ";
+    }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -50,38 +69,40 @@ if (isset($_POST['submit'])) {
                     </div>
                     <div class="row">
                         <div class="col-12 grid-margin stretch-card">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title" style="text-align: center;">Edit Student</h4>
-                                    <form class="forms-sample" action="" method="post">
-                                        <div class="form-group">
-                                            <label for="stuname">Student Name</label>
-                                            <input type="text" name="stuname" class="form-control" value="<?php echo $student['nama']; ?>" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="stuid">NIM</label>
-                                            <input type="text" name="stuid" class="form-control" value="<?php echo $student['nim']; ?>" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="stuclass">Jurusan</label>
-                                            <select name="stuclass" class="form-control" required>
-                                                <option value="Teknik Domain Expansion" <?php if ($student['jurusan'] == 'Teknik Domain Expansion') echo 'selected'; ?>>Teknik Domain Expansion</option>
-                                                <option value="Ilmu Pengendalian Chuunibyou" <?php if ($student['jurusan'] == 'Ilmu Pengendalian Chuunibyou') echo 'selected'; ?>>Ilmu Pengendalian Chuunibyou</option>
-                                                <option value="Psikologi Hubungan Anime" <?php if ($student['jurusan'] == 'Psikologi Hubungan Anime') echo 'selected'; ?>>Psikologi Hubungan Anime</option>
-                                                <option value="Manajemen Isekai" <?php if ($student['jurusan'] == 'Manajemen Isekai') echo 'selected'; ?>>Manajemen Isekai</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="stuangkatan">Angkatan</label>
-                                            <input type="number" name="stuangkatan" class="form-control" value="<?php echo $student['angkatan']; ?>" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary mr-2" name="submit">Update</button>
-                                    </form>
+                        <div class="card">
+                            <div class="card-body">
+                            <h4 class="card-title" style="text-align: center;">Edit Students</h4>
+                            <form class="forms-sample" action="" method="post">
+                                <div class="form-group">
+                                <label for="stuname">Student Name</label>
+                                <input type="text" name="stuname" class="form-control" required>
                                 </div>
+                                <div class="form-group">
+                                <label for="stuid">NIM</label>
+                                <input type="text" name="stuid" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                <label for="stuclass">Jurusan</label>
+                                <select name="stuclass" class="form-control" required>
+                                    <option value="">Pilih Jurusan</option>
+                                    <option value="Teknik Domain Expansion">Teknik Domain Expansion</option>
+                                    <option value="Ilmu Pengendalian Chuunibyou">Ilmu Pengendalian Chuunibyou</option>
+                                    <option value="Psikologi Hubungan Anime">Psikologi Hubungan Anime</option>
+                                    <option value="Manajemen Isekai">Manajemen Isekai</option>
+                                </select>
+                                </div>
+                                <div class="form-group">
+                                <label for="stuangkatan">Angkatan</label>
+                                <input type="number" name="stuangkatan" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary mr-2" name="update">Update</button>
+
+                            </form>
                             </div>
                         </div>
+                        </div>
                     </div>
-                </div>
+                    </div>
                 <?php include_once('includes/footer.php'); ?>
             </div>
         </div>

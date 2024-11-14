@@ -1,6 +1,6 @@
 <?php
-include('includes/dbconnection.php'); // Pastikan menggunakan mysqli_connect
-include('includes/function.php');
+include('includes/dbconnection.php'); 
+include('includes/function.php'); // Pastikan koneksi menggunakan mysqli
 
 if (isset($_POST['submit'])) {
   

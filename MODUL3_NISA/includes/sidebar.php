@@ -32,6 +32,7 @@
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="add-students.php">Add Students</a></li>
           <li class="nav-item"> <a class="nav-link" href="manage-students.php">Manage Students</a></li>
+          <li class="nav-item"> <a class="nav-link" href="edit-students.php">Edit Students</a></li>
         </ul>
       </div>
     </li>
@@ -44,6 +45,7 @@
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href=#>Add Class</a></li>
           <li class="nav-item"> <a class="nav-link" href=#>Manage Class</a></li>
+          
         </ul>
       </div>
     </li>

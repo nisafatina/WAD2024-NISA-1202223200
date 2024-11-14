@@ -3,23 +3,20 @@ session_start();
 error_reporting(0);
 include('includes/dbconnection.php'); // Pastikan koneksi menggunakan mysqli
 
-
 //Buatkan logika untuk menghapus data siswa dari tabel tb_student berdasarkan id yang diterima dari parameter URL 'delid'
-if (isset($_GET['stuid'])) {
-    $stuid= $_GET["stuid"];
-    $delete_query = "DELETE FROM tb_student WHERE stuid= $stuid";
-    mysqli_query($conn, $delete_query);
-    // (4) Buatkan perkondisi jika eksekusi query berhasil
-    if (mysqli_affected_rows($conn) > 0) {
-        header("Location: add-student.php");
-        if ($result) {
-            echo "<script>alert('Data deleted');</script>";
-            echo "<script>window.location.href = 'manage-students.php'</script>";
-        } else {
-            echo "<script>alert('Something went wrong. Please try again.');</script>";
-        }
+if (isset($_GET['delid'])) {
+    $studentId = intval($_GET['delid']); 
+
+    $query = "DELETE FROM tb_student WHERE id = '$studentId'";
+    $result = mysqli_query($conn, $query);
+    if ($result) {
+        echo "<script>alert('Data deleted');</script>";
+        echo "<script>window.location.href = 'manage-students.php'</script>";
+    } else {
+        echo "<script>alert('Something went wrong. Please try again.');</script>";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -54,7 +51,7 @@ if (isset($_GET['stuid'])) {
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                                <li class="breadcrumb-item active" aria-current="page"> Manage Students</li>
+                                <li class="breadcrumb-item active" aria-current="page">Manage Students</li>
                             </ol>
                         </nav>
                     </div>
@@ -64,7 +61,7 @@ if (isset($_GET['stuid'])) {
                                 <div class="card-body">
                                     <div class="d-sm-flex align-items-center mb-4">
                                         <h4 class="card-title mb-sm-0">Manage Students</h4>
-                                        <a href="#" class="text-dark ml-auto mb-3 mb-sm-0"> View all Students</a>
+                                        <a href="#" class="text-dark ml-auto mb-3 mb-sm-0">View all Students</a>
                                     </div>
                                     <div class="table-responsive border rounded p-1">
                                         <table class="table">
@@ -80,30 +77,29 @@ if (isset($_GET['stuid'])) {
                                             </thead>
                                             <tbody>
                                                 <!-- // Jalankan query SQL untuk mengambil semua data dari tabel tb_student, kemudian loop disini -->
-                                                
-
+                                                <?php
+                                                $query = "SELECT * FROM tb_student";
+                                                $result = mysqli_query($conn, $query);
+                                               
+                                                while ($row = mysqli_fetch_assoc($result)) {
+                                                ?>
                                                     <tr>
+                                                        <td><?php echo $cnt++; ?></td>
+                                                         <!-- Tampilkan NIM -->
+                                                        <td><?php echo $row['nim']; ?></td>
+                                                        <!-- Tampilkan Nama -->
+                                                        <td><?php echo $row['nama']; ?></td>
+                                                        <!-- Tampilkan Jurusan -->
+                                                        <td><?php echo $row['jurusan']; ?></td>
+                                                        <!-- Tampilkan Angkatan -->
+                                                        <td><?php echo $row['angkatan']; ?></td>
                                                         <td>
-                                                            <?php echo $cnt; ?>
-                                                        </td>
-                                                        <td>
-                                                            <!-- Tampilkan NIM -->
-                                                        </td>
-                                                        <td>
-                                                            <!-- Tampilkan Nama -->
-                                                        </td>
-                                                        <td>
-                                                            <!-- Tampilkan Jurusan -->
-                                                        </td>
-                                                        <td>
-                                                            <!-- Tampilkan Angkatan -->
-                                                        </td>
-                                                        <td>
-                                                            <a href=""><i class="icon-eye"></i></a>
+                                                            <a href="#"><i class="icon-eye"></i></a>
                                                             ||
-                                                            <a href="manage-student.php?delid=<?php echo $row['id']; ?>" onclick="return confirm('Do you really want to delete?');"><i class="icon-trash"></i></a>
+                                                            <a href="manage-students.php?delid=<?php echo $row['id']; ?>" onclick="return confirm('Do you really want to delete?');"><i class="icon-trash"></i></a>
                                                         </td>
                                                     </tr>
+                                                <?php } ?>
                                             </tbody>
                                         </table>
                                     </div>
@@ -118,11 +114,10 @@ if (isset($_GET['stuid'])) {
         </div>
         <!-- page-body-wrapper ends -->
     </div>
-
     <!-- container-scroller -->
     <!-- plugins:js -->
     <script src="vendors/js/vendor.bundle.base.js"></script>
-    <!-- endinject -->
+     <!-- endinject -->
     <!-- Plugin js for this page -->
     <script src="vendors/chart.js/Chart.min.js"></script>
     <script src="vendors/moment/moment.min.js"></script>
@@ -136,6 +131,6 @@ if (isset($_GET['stuid'])) {
     <!-- Custom js for this page -->
     <script src="js/dashboard.js"></script>
     <!-- End custom js for this page -->
-</body>
 
+</body>
 </html>
