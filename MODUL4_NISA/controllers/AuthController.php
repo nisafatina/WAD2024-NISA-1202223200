@@ -31,7 +31,7 @@ class AuthController
                     $_SESSION["login"] = true;
                     $_SESSION["user"] = $data_mahasiswa;
                     $_SESSION["message"] = "Login Berhasil";
-                if (isset($input["remember"])) {
+                if (isset($input["remember_me"])) {
                     setcookie("nim", $data['nim'], time() + (86400 * 30), "/"); // 30 hari
                     setcookie("password", $data['password'], time() + (86400 * 30), "/"); // 30 hari
                 } else {
@@ -46,8 +46,8 @@ class AuthController
                 $_SESSION['color'] = "danger";
             }
         } else {
-            $_SESSION['message'] = "Email tidak ditemukan";
-            $_SESSION['color'] = "NIM Tidak Ditemukan";
+            $_SESSION['message'] = "NIM Tidak Ditemukan";
+            $_SESSION['color'] = "dange";
         }
             
 
@@ -88,23 +88,21 @@ class AuthController
         //    - jika jurusan = teknik informatika, maka $kode_jurusan = 14
         // 3. Return nilai kode_jurusan
         $kode_jurusan = 0;
-        if ($jurusan = "kedokteran"){
-            $kode_jurusan = 11;
-        }
-        if ($jurusan = "psikologi"){
-            $kode_jurusan = 12;
-        }
-        if ($jurusan = "biologi"){
-            $kode_jurusan = 13;
-        }
-        if ($jurusan = "keteknik informatika"){
-            $kode_jurusan = 14;
+        
+            switch ($jurusan) {
+                case "kedokteran":
+                    $kode_jurusan = 11;
+                case "psikologi":
+                    $kode_jurusan = 12;
+                case "biologi":
+                    $kode_jurusan = 13;
+                case "teknik informatika":
+                    $kode_jurusan = 14;
+            }
+            return $kode_jurusan;
         }
 
-    
-    }
-
-    private function generateNIM($id_pendaftaran){
+    private function generateNim($id_pendaftaran){
         $conn = $this->conn;
 
         $query = "SELECT * FROM pendaftaran WHERE id = '$id_pendaftaran'";
@@ -112,10 +110,19 @@ class AuthController
         $data_pendaftaran = mysqli_fetch_assoc($result);
         $tahunmasuk = date('y');
 
-        if ($data_mahasiswa){
-            $jurusan = "SELECT jurusan FROM pendaftaran WHERE data_mahasiswa = '$id_pendaftaran'";
+        if ($data_pendaftaran){
+            $jurusan = $data_pendaftaran['jurusan'];
             $kode_jurusan = $this->getJurusan($jurusan);
-    }
+
+            if ($kode_jurusan !== 0) {
+                $nim = $kode_jurusan.$tahunmasuk.str_pad($id_pendaftaran, 1, 2, '0', STR_PAD_LEFT);
+                return $nim;
+            }
+            return false;    
+        }
+        return false;
+    
+    
 
 
 
@@ -140,6 +147,18 @@ class AuthController
     {
         $conn = $this->conn;
         if (isset($_POST['submit'])) {
+            $id_pendaftaran = $_POST['id_pendaftaran'];
+            $query = "SELECT * FROM pendaftaran WHERE id = '$id_pendaftaran' AND status = 'lulus'";
+            $result = mysqli_query($this->conn, $query);
+            $data_pendaftaran = mysqli_fetch_assoc($result);
+
+            if ($data_pendaftaran) {
+                $_SESSION['id_pendaftaran'] = $id_pendaftaran;
+                header('Location: index.php?controller=auth&action=register_step_2');
+                exit;
+            } else {
+                $_SESSION['message'] = "ID Pendaftaran tidak valid atau belum lulus.";
+            }
             // TODO: Lengkapi fungsi register step 1
             // 1. Ambil id_pendaftaran dari form register step 1 dan simpan di variabel $id_pendaftaran
             // 2. Buat query untuk mencari pendaftaran berdasarkan id_pendaftaran dengan status 'lulus' dan simpan di variabel $query
@@ -160,46 +179,90 @@ class AuthController
     public function register_step_2() 
     {
         $conn = $this->conn;
+        if (!isset($_SESSION['id_pendaftaran'])) {
+            header('Location: index.php?controller=auth&action=register_step_1');
+            exit;
+        }
         // TODO: Cek apakah id_pendaftaran sudah ada di session
         // 1. Jika id_pendaftaran belum ada di session:
         //    - Redirect ke halaman register step 1
         //    - Gunakan header('Location: index.php?controller=auth&action=register_step_1')
         //    - Jangan lupa exit setelah redirect
 
-        if (isset($_POST['submit'])) {
+        
             // TODO: Ambil data dari form register step 2
             // 1. Ambil password dari form dan simpan di variabel $password 
             // 2. Ambil confirm_password dari form dan simpan di variabel $confirm_password
-
+            if (isset($_POST['submit'])) {
+                $password = $_POST['password'];
+                $confirm_password = $_POST['confirm_password'];
             // TODO: Validasi password
             // 1. Cek apakah password sama dengan confirm_password
+
             // 2. Jika sama:
             //    - Ambil id_pendaftaran dari session dan simpan di variabel $id_pendaftaran
             //    - Buat query untuk mengambil data pendaftaran berdasarkan id_pendaftaran dan simpan di variabel $query
             //    - Eksekusi query menggunakan mysqli_query dan simpan di variabel $result
             //    - Ambil hasil query menggunakan mysqli_fetch_assoc dan simpan di variabel $data_pendaftaran
             //    - Generate NIM menggunakan fungsi $this->generateNIM($id_pendaftaran) dan simpan di variabel $nim
+                if ($password === $confirm_password) {
+                    $id_pendaftaran = $_SESSION['id_pendaftaran'];
+                    $query = "SELECT * FROM pendaftaran WHERE id = '$id_pendaftaran'";
+                    $result = mysqli_query($this->conn, $query);
+                    $data_pendaftaran = mysqli_fetch_assoc($result);
+                    if ($data_pendaftaran) {
+                        $nim = $this->generateNIM($id_pendaftaran);
+
             //
             //    - Buat query untuk cek apakah NIM sudah ada di database dan simpan di variabel $query_check_nim
             //    - Eksekusi query cek NIM menggunakan mysqli_query dan simpan di variabel $result_check_nim
+                        $query_check_nim = "SELECT * FROM mahasiswa WHERE nim = '$nim'";
+                        $result_check_nim = mysqli_query($this->conn, $query_check_nim);
             //    - Jika NIM sudah ada:
             //      - Set session message "NIM sudah terdaftar"
+                        if (mysqli_num_rows($result_check_nim) > 0) {
+                            $_SESSION['message'] = "NIM sudah terdaftar.";
+                        }
+
             //    - Jika NIM belum ada:
             //      - Hash password menggunakan password_hash dengan PASSWORD_DEFAULT dan simpan di variabel $hashed_password
             //      - Ambil nama dari $data_pendaftaran dan simpan di variabel $nama
             //      - Ambil jurusan dari $data_pendaftaran dan simpan di variabel $jurusan
             //      - Buat query INSERT untuk menyimpan data mahasiswa (nim, id_pendaftaran, password, nama, jurusan)
             //      - Eksekusi query INSERT menggunakan mysqli_query dan simpan di variabel $result_insert
+                        else {
+                            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                            $nama = $data_pendaftaran['nama'];
+                            $jurusan = $data_pendaftaran['jurusan'];
+
+                            $query_insert = "INSERT INTO mahasiswa (nim, id_pendaftaran, password, nama, jurusan) VALUES ('$nim', '$id_pendaftaran', '$hashed_password', '$nama', '$jurusan')";
+                            $result_insert = mysqli_query($this->conn, $query_insert);
             //      - Jika eksekusi query berhasil:
             //        - Set session message berisi informasi bahwa register berhasil dan NIM
             //        - Hapus session id_pendaftaran menggunakan unset()
             //        - Redirect ke halaman login menggunakan header('Location: index.php?controller=auth&action=login')
             //        - Exit setelah redirect
+                            if ($result_insert) {
+                                $_SESSION['message'] = "Register berhasil. NIM: $nim";
+                                unset($_SESSION['id_pendaftaran']);
+                                header('Location: index.php?controller=auth&action=login');
+                                exit;
             //      - Jika eksekusi query gagal:
             //        - Set session message "Register Gagal"
+                            } else {
+                                $_SESSION['message'] = "Register Gagal.";
+                            }
+                        }
+                    }
+                
+            
             // 3. Jika password tidak sama:
             //    - Set session message "Password Tidak Cocok"
+            } else {
+                $_SESSION['message'] = "Password Tidak Cocok";
+            }
         }
+        
 
         include 'views/auth/register_step_2.php';
     }

@@ -13,8 +13,33 @@ class DashboardController {
 
     public function index() {
         $conn = $this->conn;
+        if (!isset($_SESSION['login'])) {
+            if (isset($_COOKIE['nim']) && isset($_COOKIE['password'])) {
+                $nim = $_COOKIE['nim'];
+                $password = $_COOKIE['password'];
+
+                $query = "SELECT * FROM mahasiswa WHERE nim = '$nim'";
+                $result = mysqli_query($conn, $query);
+                $data_mahasiswa = mysqli_fetch_assoc($result);
+
+                if ($data_mahasiswa && password_verify($password, $data_mahasiswa['password'])) {
+                    $_SESSION['login'] = true;
+                    $_SESSION['user'] = $data_mahasiswa;
+                    $_SESSION['message'] = "Login Berhasil (Melalui Cookie)";
+                } else {
+                    $_SESSION['message'] = "Login Gagal (Melalui Cookie)";
+                    header('Location: index.php?controller=auth&action=login');
+                    exit;
+                }
+            } else {
+                $_SESSION['message'] = "Please login first";
+                header('Location: index.php?controller=auth&action=login');
+                exit;
+            }
+        }
         // TODO: Implementasi sistem autentikasi dengan langkah berikut:
         // 1. Cek apakah user sudah login dengan memeriksa session login menggunakan isset()
+        
         // 2. Jika belum login:
         //    - Cek apakah ada cookie 'nim' dan 'password' menggunakan isset()
         //    - Jika ada cookie:
@@ -42,6 +67,10 @@ class DashboardController {
         // 3. Eksekusi query dengan mysqli_query dan simpan di variabel $result
         // 4. Ambil hasil query dengan mysqli_fetch_assoc dan simpan ke variabel $mahasiswa
 
+        $nim = $_SESSION['user']['nim'];
+        $query = "SELECT * FROM mahasiswa WHERE nim = '$nim'";
+        $result = mysqli_query($conn, $query);
+        $mahasiswa = mysqli_fetch_assoc($result);
         include 'views/dashboard/index.php';
     }
 }
